@@ -78,7 +78,7 @@ class galah(object):
         self.Xnorm    = (X/Xerr[np.newaxis,:])
 
 class apogeedr16_rc(object):
-    def __init__(self, path="../data/apogee-rc-DR16.fits", okayflags=True, sample="all"):
+    def __init__(self, path="../data/apogee-rc-DR16.fits", okayflags=True, sample="all", add_astroNN=False):
         # Define useful sub-samples from APOGEE DR16 RC catalogue (Bovy+2014):
         apogee = Table.read(path)
         self.sample = sample
@@ -103,6 +103,10 @@ class apogeedr16_rc(object):
         # Now join all conditions and return what's left.
         self.data = apogee[ okayflagssnrchi2 & elemflags]
         print(len(self.data), "stars in your APOGEE DR16 sample", sample)
+        if add_astroNN:
+            # Add astroNN data - Read table:
+            astronn_rc = Table.read("../data/apogee-rc-DR16_astroNN.fits")
+            self.nndata= astronn_rc[okayflagssnrchi2 & elemflags]
         return
     
     def get_ndimspace(self, cn=True, age=False, norm="stdev"):
@@ -132,13 +136,77 @@ class apogeedr16_rc(object):
         self.X, self.Xerr, self.Xnorm = X, Xerr, Xnorm
         return
 
-    def get_umap_tsne_colours(self, p=None, lr=None, nn=None, md=None, metric="euclidean"):
+    def get_ndimspace_H(self, cn=True, age=False, norm="stdev"):
+        """
+        Cut out missing data and prepare t-SNE input array
+        Optional:
+            age: Bool  - include age in the analysis
+            cn:  Bool  - include [C/H] & [N/H], default: True
+            norm: str  - normalisation method, default: "stdev"
+        """
+        # For giants, everything up to Cu is okay
+        X        = self.data['X_H'][:, :20]
+        Xerr     = np.mean(self.data['X_H_ERR'][:, :20], axis=0)
+        if not cn:
+            X = X[:,2:]; Xerr = Xerr[2:]
+        if norm == "hogg2016":
+            # Normalise everything by the typical range as in Hogg+2016: 
+            Xnorm    = (X/Xerr[np.newaxis,:])
+        elif norm == "stdev":
+            # Normalise everything by the typical range defined by the std deviation: 
+            Xnorm    = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
+        elif norm == None:
+            # Do not normalise at all:
+            self.Xnorm    = X
+        else:
+            raise ValueError("Please pass a valid 'norm' keyword.")
+        self.X, self.Xerr, self.Xnorm = X, Xerr, Xnorm
+        return
+
+    def get_ndimspace_H_astroNN(self, cn=True, age=False, norm="stdev"):
+        """
+        Cut out missing data and prepare t-SNE input array
+        Optional:
+            age: Bool  - include age in the analysis
+            cn:  Bool  - include [C/H] & [N/H], default: True
+            norm: str  - normalisation method, default: "stdev"
+        """
+        # For giants, everything up to Cu is okay
+        X        = np.c_[self.nndata['C_H'], self.nndata['CI_H'], self.nndata['N_H'], self.nndata['O_H'], 
+                         self.nndata['NA_H'], self.nndata['MG_H'], self.nndata['AL_H'], self.nndata['SI_H'], 
+                         self.nndata['P_H'], self.nndata['S_H'], self.nndata['K_H'], self.nndata['CA_H'], 
+                         self.nndata['TI_H'], self.nndata['TIII_H'], self.nndata['V_H'], self.nndata['CR_H'], 
+                         self.nndata['MN_H'], self.nndata['FE_H'], self.nndata['CO_H'], self.nndata['NI_H'] 
+                         ]
+        Xerr     = np.mean(np.c_[self.nndata['C_H_ERR'], self.nndata['CI_H_ERR'], self.nndata['N_H_ERR'], self.nndata['O_H_ERR'], 
+                         self.nndata['NA_H_ERR'], self.nndata['MG_H_ERR'], self.nndata['AL_H_ERR'], self.nndata['SI_H_ERR'], 
+                         self.nndata['P_H_ERR'], self.nndata['S_H_ERR'], self.nndata['K_H_ERR'], self.nndata['CA_H_ERR'], 
+                         self.nndata['TI_H_ERR'], self.nndata['TIII_H_ERR'], self.nndata['V_H_ERR'], self.nndata['CR_H_ERR'], 
+                         self.nndata['MN_H_ERR'], self.nndata['FE_H_ERR'], self.nndata['CO_H_ERR'], self.nndata['NI_H_ERR'] 
+                         ], axis=0)
+        if not cn:
+            X = X[:,2:]; Xerr = Xerr[2:]
+        if norm == "hogg2016":
+            # Normalise everything by the typical range as in Hogg+2016: 
+            Xnorm    = (X/Xerr[np.newaxis,:])
+        elif norm == "stdev":
+            # Normalise everything by the typical range defined by the std deviation: 
+            Xnorm    = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
+        elif norm == None:
+            # Do not normalise at all:
+            self.Xnorm    = X
+        else:
+            raise ValueError("Please pass a valid 'norm' keyword.")
+        self.X, self.Xerr, self.Xnorm = X, Xerr, Xnorm
+        return
+
+    def get_umap_tsne_colours(self, p=None, lr=None, nn=None, md=None, metric="euclidean", version="_H"):
         """
         Get the umap & t-SNE results for the optimal hyperparameters,
         and also the arrays used to colour the maps.
         """
         #Read umap/t-SNE results table
-        results = Table.read("../data/dimred_results/apogee_rc_dimred_hyperparametertest.fits")
+        results = Table.read("../data/dimred_results/apogee_rc"+version+"_dimred_hyperparametertest.fits")
         # Get the relevant columns
         self.Xp = results["X_PCA"]
         self.Yp = results["Y_PCA"]
