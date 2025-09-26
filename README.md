@@ -1,8 +1,8 @@
 # apogee_rc_dimred
 
-This project contains most of the code for the MSc thesis of Ignacio García Soriano (U Barcelona, June 2020) and the TFG thesis of Jaume Dolcet Monès (U Barcelona, 2021). 
+This project contains most of the code for the MSc thesis of Ignacio García Soriano (U Barcelona, June 2020) and the [TFG thesis of Jaume Dolcet Monès](https://diposit.ub.edu/dspace/handle/2445/180269) (U Barcelona, 2021). 
 
-Some of the code is also used in [Casamiquela et al. (2021)](https://ui.adsabs.harvard.edu/abs/2021arXiv210813431C/abstract). It is inspired by and extends the [abundance-space analysis](https://github.com/fjaellet/abundance-tsne) in [Anders et al. (2018)](https://ui.adsabs.harvard.edu/abs/2018A%26A...619A.125A/abstract) using APOGEE RC stars. 
+Some of the code is also used in [Casamiquela et al. (2021)](https://ui.adsabs.harvard.edu/abs/2021A%26A...654A.151C/abstract). It extends the [abundance-space analysis](https://github.com/fjaellet/abundance-tsne) in [Anders et al. (2018)](https://ui.adsabs.harvard.edu/abs/2018A%26A...619A.125A/abstract) using APOGEE RC stars. 
 
 To make the notebooks in py/ work, you will need to download [the DR16 APOGEE RC catalogue](https://data.sdss.org/sas/dr16/apogee/vac/apogee-rc/cat/apogee-rc-DR16.fits) (~260 MB) to the data/ folder. 
 The corresponding data model is [here](https://data.sdss.org/datamodel/files/APOGEE_RC/cat/apogee-rc-DR16.html). The reference is [Bovy
